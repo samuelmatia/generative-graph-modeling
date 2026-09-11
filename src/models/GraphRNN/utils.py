@@ -59,10 +59,27 @@ def sequence_to_graph(S):
 def compute_max_prev_node(graphs, num_samples=1000, percentile=99.9, seed=0):
     rng=random.Random(seed)
     gaps=[]
-    for _ in range(num_samples)
+    for _ in range(num_samples):
+        G=rng.choice(graphs)
+        order=get_bfs_order(G)
+        idx= {node:i for i,node in enumerate(order)}
+
+        for u,v in G.edges():
+            if u in idx and v in idx:
+                gaps.append(abs(idx[u]-idx[v]))
+    if not gaps:
+        return 1
+    return int(np.percentile(gaps, percentile)) + 1
 
 
 def make_mask(lengths, T, M, device=None):
-    
-
-
+    B=len(lengths)
+    mask=np.zeros((B, T, M), dtype=np.float32)
+    for b, L in enumerate(lengths):
+        L=int(L)
+        for t in range(L):
+            valid=min(t+1, M)
+            mask[b, t, :valid] = 1.0
+    import torch
+    m=torch.from_numpy(mask)
+    return m.to(device) if device is not None else m
