@@ -94,3 +94,30 @@ def get_dataset(name, data_dir="data", force_reload=False, seed=0):
     max_num_node=max(G.number_of_nodes() for G in graphs)
     max_prev_node=compute_max_prev_node(train_graphs)
     return train_graphs, test_graphs, max_num_node, max_prev_node
+
+
+#Graph to padded(x, y, length)
+class GraphSeqDataset(Dataset):
+    def __init__(self, graphs, max_prev_node, max_num_node):
+        self.graphs=graphs
+        self.M=max_prev_node
+        self.max_num_node=max_num_node
+
+    def __len__(self):
+        return len(self.graphs)
+
+    def __getitem__(self, index):
+        G=self.graphs[index]
+        S=graph_to_sequence(G, self.M, self.max_num_node)
+        T=S.shape[0]
+        total_T=self.max_num_node - 1
+
+        x=np.zeros((total_T, self.M), dtype=np.float32)
+        y=np.zeros((total_T, self.M), dtype=np.float32)
+        x[0, :]=1.0
+        if T>1:
+            x[1:T] = S[:T-1]
+        y[:T]=S
+
+        return torch.from_numpy(x), torch.from_numpy(y), T
+
