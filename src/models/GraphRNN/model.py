@@ -29,7 +29,7 @@ class EdgeLevelRNN(nn.Module):
     def __init__(self, embedding_size, hidden_size, num_layers=4):
         super().__init__()
         self.input_embed=nn.Sequential(
-            nn.Linear(1, embedding_size);
+            nn.Linear(1, embedding_size),
             nn.ReLU()
         )
         self.rnn=nn.GRU(embedding_size, hidden_size, num_layers, batch_first=True)
@@ -61,7 +61,7 @@ class EdgeLevelMLP(nn.Module):
             nn.Linear(embedding_size, max_prev_node)
         )
 
-    def forward(self, graph_hidden)
+    def forward(self, graph_hidden):
         return torch.sigmoid(self.mlp(graph_hidden))
 
 
@@ -70,14 +70,14 @@ class GraphRNN(nn.Module):
     def __init__(self, max_prev_node, graph_hidden=128, graph_embed=64, edge_hidden=16,
     edge_embed=8, graph_layers=4, edge_layers=4, variant="rnn"):
         super().__init__()
-        assert variant in ("rnn"; "s")
+        assert variant in ("rnn", "s")
         self.M=max_prev_node
         self.variant=variant
         self.graph_rnn=GraphLevelRNN(max_prev_node, graph_embed, graph_hidden, graph_layers)
 
-        if variant="rnn":
+        if variant=="rnn":
             self.edge_rnn=EdgeLevelRNN(edge_embed, edge_hidden, edge_layers)
-            self.proj=nn.Linear(grph_hidden, edge_hidden)
+            self.proj=nn.Linear(graph_hidden, edge_hidden)
         else:
             self.edge_mlp=EdgeLevelMLP(graph_hidden, graph_embed, max_prev_node)
 
@@ -119,7 +119,7 @@ class GraphRNN(nn.Module):
                 else:
                     sample=torch.zeros(1, self.M, device=device)
                     he=self.edge_rnn.init_hidden(graph_out, self.proj)
-                    edge_in=torch.ones(1, 1, 1, device=device)*
+                    edge_in=torch.ones(1, 1, 1, device=device)
                     valid=min(t+1, self.M)
                     for k in range(valid):
                         prob, he=self.edge_rnn(edge_in, he)
