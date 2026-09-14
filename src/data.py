@@ -69,3 +69,28 @@ DATASET_BUILDERS = {
     "ego": generate_ego_graphs
 }
 
+
+#Dataset loading
+def get_dataset(name, data_dir="data", force_reload=False, seed=0):
+    processed_path=os.path.join(data_dir, "processed", f"{name}.pkl")
+
+    if os.path.exists(processed_path) and not force_reload:
+        with open(processed_path, "rb") as f:
+            graphs=pickle.load(f)
+    else:
+        if name=="ego":
+            graphs=generate_ego_graphs(root=os.path.join(data_dir, "raw"), seed=seed)
+        else:
+            graphs=DATASET_BUILDERS[name](seed=seed)
+        os.makedirs(os.path.dirname(processed_path), exist_ok=True)
+        with open(processed_path, "wb") as f:
+            pickle.dump(graphs, f)
+
+    graphs=[G for G in graphs if G.number_of_nodes() > 1]
+    random.Random(seed).shuffle(graphs)
+    split=max(1, int(0.8 * len(graphs)))
+    train_graphs, test_graphs=graphs[:split], graphs[split:]
+
+    max_num_node=max(G.number_of_nodes() for G in graphs)
+    max_prev_node=compute_max_prev_node(train_graphs)
+    return train_graphs, test_graphs, max_num_node, max_prev_node
